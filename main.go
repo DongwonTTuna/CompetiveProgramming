@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"reflect"
 	"sort"
@@ -15,10 +14,6 @@ func doHere() string{
 	var answer string
 
 
-
-	a := []int{1,5,7,2,4}
-	ReverseArray(a)
-	fmt.Println(a)
 
 	return answer
 }
@@ -105,23 +100,48 @@ func ReverseSort(ints []int) []int{
 	return ints
 }
 
-func getMax(ints []int) int{
-	var largest int
-	for _, v := range ints {
-    if v > largest {
-        largest = v
+func getMax(slice interface{}) interface{} {
+    switch v := slice.(type) {
+    case []int:
+        max := v[0]
+        for _, val := range v {
+            if val > max {
+                max = val
+            }
+        }
+        return max
+    case []float64:
+        max := v[0]
+        for _, val := range v {
+            if val > max {
+                max = val
+            }
+        }
+        return max
     }
-	}
-	return largest
+    return nil
 }
-func getMin(ints []int) int{
-	var smallest int
-	for _, v := range ints {
-    if v < smallest {
-        smallest = v
+
+func getMin(slice interface{}) interface{} {
+    switch v := slice.(type) {
+    case []int:
+        min := v[0]
+        for _, val := range v {
+            if val < min {
+                min = val
+            }
+        }
+        return min
+    case []float64:
+        min := v[0]
+        for _, val := range v {
+            if val < min {
+                min = val
+            }
+        }
+        return min
     }
-	}
-	return smallest
+    return nil
 }
 
 func ReverseArray(slice interface{}) {
