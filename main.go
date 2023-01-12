@@ -9,19 +9,13 @@ import (
 	"strings"
 )
 
-
-func doHere() string{
+func doHere() string {
 	var answer string
-
-
 
 	return answer
 }
 
-
-
-
-func main(){
+func main() {
 	defer writer.Flush()
 	Str := doHere()
 	writer.WriteString(Str)
@@ -34,12 +28,12 @@ func main(){
 var reader = bufio.NewReader(os.Stdin)
 var writer = bufio.NewWriter(os.Stdout)
 
-func readLineAndSplitSpaces() []string{
+func readLineAndSplitSpaces() []string {
 	bytes, _, _ := reader.ReadLine()
 	return strings.Fields(string(bytes))
 }
 
-func convertStrsToInts(strs []string) []int{
+func convertStrsToInts(strs []string) []int {
 	var integers []int
 	for _, s := range strs {
 		n, _ := strconv.Atoi(s)
@@ -48,117 +42,149 @@ func convertStrsToInts(strs []string) []int{
 	return integers
 }
 
+func doubleArraytoLines(double [][]interface{}) string {
+	var str string
+	for _, v := range double {
+		str += ArrayToOneLine(v)
+		str += "\n"
+	}
+	return str
+}
+
 func parseToInt(text string) (res int) {
 	v, _ := strconv.Atoi(text)
 	return v
 }
 
-func convertIntstoStrs(ints []int) []string{
+func parseIntstoStrs(ints []int) []string {
 	var strs []string
-	for _, s := range ints{
+	for _, s := range ints {
 		n := strconv.Itoa(s)
 		strs = append(strs, n)
 	}
 	return strs
 }
 
-func ArraytoOneLine(slice interface{}) string{
-	var str string
-    val := reflect.ValueOf(slice)
-    if val.Kind() == reflect.Slice {
-        for i := 0; i < val.Len(); i++ {
-            str += " " + val.Index(i).Interface().(string)
-        }
-    }
-	return strings.TrimLeft(str, " ")
+func ArrayToOneLine(data interface{}) string {
+	var result string
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Slice {
+		for i := 0; i < val.Len(); i++ {
+			v := val.Index(i).Interface()
+			switch v.(type) {
+			case int:
+				result += strconv.Itoa(v.(int)) + " "
+			case float64:
+				result += strconv.FormatFloat(v.(float64), 'f', -1, 64) + " "
+			case string:
+				result += v.(string) + " "
+			case bool:
+				if v == true {
+					result += "Yes "
+				} else {
+					result += "No "
+				}
+			}
+		}
+	}
+	return strings.TrimRight(result, " ")
 }
 
-func ArraytoMultiLine(slice interface{}) string{
-	var str string
-    val := reflect.ValueOf(slice)
-    if val.Kind() == reflect.Slice {
-        for i := 0; i < val.Len(); i++ {
-            str += "\n" + val.Index(i).Interface().(string)
-        }
-    }
-	return strings.TrimLeft(str, "\n")
-
+func ArraytoMultiLine(data interface{}) string {
+	var result string
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Slice {
+		for i := 0; i < val.Len(); i++ {
+			v := val.Index(i).Interface()
+			switch v.(type) {
+			case int:
+				result += strconv.Itoa(v.(int)) + "\n"
+			case float64:
+				result += strconv.FormatFloat(v.(float64), 'f', -1, 64) + "\n"
+			case string:
+				result += v.(string) + "\n"
+			case bool:
+				if v == true {
+					result += "Yes\n"
+				} else {
+					result += "No\n"
+				}
+			}
+		}
+	}
+	return strings.TrimRight(result, "\n")
 }
 
-func parseToInt64(text string) (res int64) {
-	v, _ := strconv.ParseInt(text, 10, 64)
-	return v
+func SortSlice(slice interface{}) {
+	switch v := slice.(type) {
+	case []int:
+		sort.Ints(v)
+	case []float64:
+		sort.Float64s(v)
+	}
 }
 
-func Sort(ints []int) []int{
-	sort.Ints(ints)
-	return ints
-}
-
-func ReverseSort(ints []int) []int{
-	sort.Sort(sort.Reverse(sort.IntSlice(ints)))
-	return ints
+func SortSliceDescending(slice interface{}) {
+	switch v := slice.(type) {
+	case []int:
+		sort.Sort(sort.Reverse(sort.IntSlice(v)))
+	case []float64:
+		sort.Sort(sort.Reverse(sort.Float64Slice(v)))
+	}
 }
 
 func getMax(slice interface{}) interface{} {
-    switch v := slice.(type) {
-    case []int:
-        max := v[0]
-        for _, val := range v {
-            if val > max {
-                max = val
-            }
-        }
-        return max
-    case []float64:
-        max := v[0]
-        for _, val := range v {
-            if val > max {
-                max = val
-            }
-        }
-        return max
-    }
-    return nil
+	s := reflect.ValueOf(slice)
+	if s.Kind() != reflect.Slice {
+		return nil
+	}
+	max := s.Index(0).Interface()
+	for i := 1; i < s.Len(); i++ {
+		v := s.Index(i).Interface()
+		switch v := v.(type) {
+		case int:
+			if v > max.(int) {
+				max = v
+			}
+		case float64:
+			if v > max.(float64) {
+				max = v
+			}
+		}
+	}
+	return max
 }
 
 func getMin(slice interface{}) interface{} {
-    switch v := slice.(type) {
-    case []int:
-        min := v[0]
-        for _, val := range v {
-            if val < min {
-                min = val
-            }
-        }
-        return min
-    case []float64:
-        min := v[0]
-        for _, val := range v {
-            if val < min {
-                min = val
-            }
-        }
-        return min
-    }
-    return nil
+	s := reflect.ValueOf(slice)
+	if s.Kind() != reflect.Slice {
+		return nil
+	}
+	min := s.Index(0).Interface()
+	for i := 1; i < s.Len(); i++ {
+		v := s.Index(i).Interface()
+		switch v := v.(type) {
+		case int:
+			if v < min.(int) {
+				min = v
+			}
+		case float64:
+			if v < min.(float64) {
+				min = v
+			}
+		}
+	}
+	return min
 }
 
-func ReverseArray(slice interface{}) {
-    switch v := slice.(type) {
-    case []int:
-        for i := 0; i < len(v)/2; i++ {
-            j := len(v) - i - 1
-            v[i], v[j] = v[j], v[i]
-        }
-    case []string:
-        for i := 0; i < len(v)/2; i++ {
-            j := len(v) - i - 1
-            v[i], v[j] = v[j], v[i]
-        }
-    case []rune:
-        for i, j := 0, len(v)-1; i < len(v)/2; i, j = i+1, j-1 {
-            v[i], v[j] = v[j], v[i]
-        }
-    }
+func Reverse(slice interface{}) {
+	s := reflect.ValueOf(slice)
+	if s.Kind() != reflect.Slice {
+		return
+	}
+	for i, j := 0, s.Len()-1; i < j; i, j = i+1, j-1 {
+		tmp := s.Index(i).Interface()
+		s.Index(i).Set(s.Index(j))
+		s.Index(j).Set(reflect.ValueOf(tmp))
+	}
 }
