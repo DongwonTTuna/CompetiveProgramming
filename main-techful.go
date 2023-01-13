@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"log"
 	"os"
 	"reflect"
@@ -61,12 +60,12 @@ func parseStringsToNumbers(strs []string, isInteger bool) interface{} {
 }
 
 func doubleArraytoLines(double [][]interface{}) string {
-	var buffer bytes.Buffer
+	var builder strings.Builder
 	for _, v := range double {
-		buffer.WriteString(ArrayToOneLine(v))
-		buffer.WriteString("\n")
+		builder.WriteString(ArrayToOneLine(v))
+		builder.WriteString("\n")
 	}
-	return buffer.String()
+	return builder.String()
 }
 
 func parseToInt(text string) (res int) {
@@ -83,66 +82,72 @@ func parseIntstoStrs(ints []int) []string {
 	return strs
 }
 
-func ArrayToOneLine(data interface{}) string {
-	val := reflect.ValueOf(data)
-	if val.Kind() != reflect.Slice {
+func ArraytoMultiLine(data interface{}) string {
+	switch v := data.(type) {
+	case []int:
+		return MakeLineInts(v, "\n")
+	case []float64:
+		return MakeLineFloat64(v, "\n")
+	case []string:
+		return MakeLineString(v, "\n")
+	case []bool:
+		return MakeLineBool(v, "\n")
+	default:
 		return ""
 	}
-
-	var buffer bytes.Buffer
-	buffer.Grow(val.Len() * 16)
-	for i := 0; i < val.Len(); i++ {
-		v := val.Index(i).Interface()
-		switch v.(type) {
-		case int:
-			buffer.WriteString(strconv.Itoa(v.(int)))
-			buffer.WriteString(" ")
-		case float64:
-			buffer.WriteString(strconv.FormatFloat(v.(float64), 'f', -1, 64))
-			buffer.WriteString(" ")
-		case string:
-			buffer.WriteString(v.(string))
-			buffer.WriteString(" ")
-		case bool:
-			if v.(bool) {
-				buffer.WriteString("Yes ")
-			} else {
-				buffer.WriteString("No ")
-			}
-		}
-	}
-	return strings.TrimRight(buffer.String(), " ")
 }
 
-func ArraytoMultiLine(data interface{}) string {
-	val := reflect.ValueOf(data)
-	if val.Kind() != reflect.Slice {
+func ArrayToOneLine(data interface{}) string {
+	switch v := data.(type) {
+	case []int:
+		return MakeLineInts(v, " ")
+	case []float64:
+		return MakeLineFloat64(v, " ")
+	case []string:
+		return MakeLineString(v, " ")
+	case []bool:
+		return MakeLineBool(v, " ")
+	default:
 		return ""
 	}
+}
 
-	var buffer bytes.Buffer
-	buffer.Grow(val.Len() * 16)
-	for i := 0; i < val.Len(); i++ {
-		v := val.Index(i).Interface()
-		switch v.(type) {
-		case int:
-			buffer.WriteString(strconv.Itoa(v.(int)))
-			buffer.WriteString("\n")
-		case float64:
-			buffer.WriteString(strconv.FormatFloat(v.(float64), 'f', -1, 64))
-			buffer.WriteString("\n")
-		case string:
-			buffer.WriteString(v.(string))
-			buffer.WriteString("\n")
-		case bool:
-			if v.(bool) {
-				buffer.WriteString("Yes\n")
-			} else {
-				buffer.WriteString("No\n")
-			}
+func MakeLineInts(val []int, str string) string {
+	var builder strings.Builder
+	for _, v := range val {
+		builder.WriteString(strconv.Itoa(v))
+		builder.WriteString(str)
+	}
+	return strings.TrimRight(builder.String(), str)
+}
+func MakeLineFloat64(val []float64, str string) string {
+	var builder strings.Builder
+	for _, v := range val {
+		builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+		builder.WriteString(str)
+	}
+	return strings.TrimRight(builder.String(), str)
+}
+func MakeLineString(val []string, str string) string {
+	var builder strings.Builder
+	for _, v := range val {
+		builder.WriteString(v)
+		builder.WriteString(str)
+	}
+	return strings.TrimRight(builder.String(), str)
+}
+func MakeLineBool(val []bool, str string) string {
+	var builder strings.Builder
+	for _, v := range val {
+		if v {
+			builder.WriteString("Yes")
+			builder.WriteString(str)
+		} else {
+			builder.WriteString("No")
+			builder.WriteString(str)
 		}
 	}
-	return strings.TrimRight(buffer.String(), "\n")
+	return strings.TrimRight(builder.String(), str)
 }
 
 func SortSlice(slice interface{}) {
