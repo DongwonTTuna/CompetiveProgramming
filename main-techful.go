@@ -37,23 +37,15 @@ func readLineAndSplitSpaces() []string {
 
 func parseStringsToNumbers(strs []string, isInteger bool) interface{} {
 	if isInteger {
-		var ints []int
-		for _, str := range strs {
-			n, err := strconv.Atoi(str)
-			if err != nil {
-				return nil
-			}
-			ints = append(ints, n)
+		ints := make([]int, len(strs))
+		for i, v := range strs {
+			ints[i], _ = strconv.Atoi(v)
 		}
 		return ints
 	} else {
-		var floats []float64
-		for _, str := range strs {
-			n, err := strconv.ParseFloat(str, 64)
-			if err != nil {
-				return nil
-			}
-			floats = append(floats, n)
+		floats := make([]float64, len(strs))
+		for i, v := range strs {
+			floats[i], _ = strconv.ParseFloat(v, 64)
 		}
 		return floats
 	}
@@ -73,13 +65,30 @@ func parseToInt(text string) (res int) {
 	return v
 }
 
-func parseIntstoStrs(ints []int) []string {
-	var strs []string
-	for _, s := range ints {
-		n := strconv.Itoa(s)
-		strs = append(strs, n)
+func parseNumberstoStrs(slice interface{}) []string {
+	switch v := slice.(type) {
+	case []int:
+		return parseIntsToStrs(v)
+	case []float64:
+		return parseFloat64sToStrs(v)
+	default:
+		return []string{""}
 	}
-	return strs
+}
+func parseIntsToStrs(ints []int) []string {
+	res := make([]string, len(ints))
+	for i, v := range ints {
+		res[i] = strconv.Itoa(v)
+	}
+	return res
+}
+
+func parseFloat64sToStrs(float64s []float64) []string {
+	res := make([]string, len(float64s))
+	for i, f := range float64s {
+		res[i] = strconv.FormatFloat(f, 'f', -1, 64)
+	}
+	return res
 }
 
 func ArraytoMultiLine(data interface{}) string {
