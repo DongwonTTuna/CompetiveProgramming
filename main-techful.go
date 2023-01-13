@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"log"
 	"os"
 	"reflect"
@@ -60,12 +61,12 @@ func parseStringsToNumbers(strs []string, isInteger bool) interface{} {
 }
 
 func doubleArraytoLines(double [][]interface{}) string {
-	var str string
+	var buffer bytes.Buffer
 	for _, v := range double {
-		str += ArrayToOneLine(v)
-		str += "\n"
+		buffer.WriteString(ArrayToOneLine(v))
+		buffer.WriteString("\n")
 	}
-	return str
+	return buffer.String()
 }
 
 func parseToInt(text string) (res int) {
@@ -83,53 +84,65 @@ func parseIntstoStrs(ints []int) []string {
 }
 
 func ArrayToOneLine(data interface{}) string {
-	var result string
 	val := reflect.ValueOf(data)
-	if val.Kind() == reflect.Slice {
-		for i := 0; i < val.Len(); i++ {
-			v := val.Index(i).Interface()
-			switch v.(type) {
-			case int:
-				result += strconv.Itoa(v.(int)) + " "
-			case float64:
-				result += strconv.FormatFloat(v.(float64), 'f', -1, 64) + " "
-			case string:
-				result += v.(string) + " "
-			case bool:
-				if v == true {
-					result += "Yes "
-				} else {
-					result += "No "
-				}
+	if val.Kind() != reflect.Slice {
+		return ""
+	}
+
+	var buffer bytes.Buffer
+	buffer.Grow(val.Len() * 16)
+	for i := 0; i < val.Len(); i++ {
+		v := val.Index(i).Interface()
+		switch v.(type) {
+		case int:
+			buffer.WriteString(strconv.Itoa(v.(int)))
+			buffer.WriteString(" ")
+		case float64:
+			buffer.WriteString(strconv.FormatFloat(v.(float64), 'f', -1, 64))
+			buffer.WriteString(" ")
+		case string:
+			buffer.WriteString(v.(string))
+			buffer.WriteString(" ")
+		case bool:
+			if v.(bool) {
+				buffer.WriteString("Yes ")
+			} else {
+				buffer.WriteString("No ")
 			}
 		}
 	}
-	return strings.TrimRight(result, " ")
+	return strings.TrimRight(buffer.String(), " ")
 }
 
 func ArraytoMultiLine(data interface{}) string {
-	var result string
 	val := reflect.ValueOf(data)
-	if val.Kind() == reflect.Slice {
-		for i := 0; i < val.Len(); i++ {
-			v := val.Index(i).Interface()
-			switch v.(type) {
-			case int:
-				result += strconv.Itoa(v.(int)) + "\n"
-			case float64:
-				result += strconv.FormatFloat(v.(float64), 'f', -1, 64) + "\n"
-			case string:
-				result += v.(string) + "\n"
-			case bool:
-				if v == true {
-					result += "Yes\n"
-				} else {
-					result += "No\n"
-				}
+	if val.Kind() != reflect.Slice {
+		return ""
+	}
+
+	var buffer bytes.Buffer
+	buffer.Grow(val.Len() * 16)
+	for i := 0; i < val.Len(); i++ {
+		v := val.Index(i).Interface()
+		switch v.(type) {
+		case int:
+			buffer.WriteString(strconv.Itoa(v.(int)))
+			buffer.WriteString("\n")
+		case float64:
+			buffer.WriteString(strconv.FormatFloat(v.(float64), 'f', -1, 64))
+			buffer.WriteString("\n")
+		case string:
+			buffer.WriteString(v.(string))
+			buffer.WriteString("\n")
+		case bool:
+			if v.(bool) {
+				buffer.WriteString("Yes\n")
+			} else {
+				buffer.WriteString("No\n")
 			}
 		}
 	}
-	return strings.TrimRight(result, "\n")
+	return strings.TrimRight(buffer.String(), "\n")
 }
 
 func SortSlice(slice interface{}) {
@@ -138,6 +151,8 @@ func SortSlice(slice interface{}) {
 		sort.Ints(v)
 	case []float64:
 		sort.Float64s(v)
+	case []string:
+		sort.Strings(v)
 	}
 }
 
@@ -147,72 +162,105 @@ func SortSliceDescending(slice interface{}) {
 		sort.Sort(sort.Reverse(sort.IntSlice(v)))
 	case []float64:
 		sort.Sort(sort.Reverse(sort.Float64Slice(v)))
+	case []string:
+		sort.Sort(sort.Reverse(sort.StringSlice(v)))
 	}
 }
 
 func getMax(slice interface{}) interface{} {
-	s := reflect.ValueOf(slice)
-	if s.Kind() != reflect.Slice {
+	switch s := slice.(type) {
+	case []int:
+		max := getMaxInt(s)
+		return max
+	case []float64:
+		max := getMaxFloat64(s)
+		return max
+	default:
 		return nil
 	}
-	max := s.Index(0).Interface()
-	for i := 1; i < s.Len(); i++ {
-		v := s.Index(i).Interface()
-		switch v := v.(type) {
-		case int:
-			if v > max.(int) {
-				max = v
-			}
-		case float64:
-			if v > max.(float64) {
-				max = v
-			}
+}
+
+func getMaxInt(slice []int) int {
+	max := slice[0]
+	for _, value := range slice {
+		if value > max {
+			max = value
+		}
+	}
+	return max
+}
+
+func getMaxFloat64(slice []float64) float64 {
+	max := slice[0]
+	for _, value := range slice {
+		if value > max {
+			max = value
 		}
 	}
 	return max
 }
 
 func getMin(slice interface{}) interface{} {
-	s := reflect.ValueOf(slice)
-	if s.Kind() != reflect.Slice {
+	switch s := slice.(type) {
+	case []int:
+		max := getMinInt(s)
+		return max
+	case []float64:
+		max := getMinFloat64(s)
+		return max
+	default:
 		return nil
 	}
-	min := s.Index(0).Interface()
-	for i := 1; i < s.Len(); i++ {
-		v := s.Index(i).Interface()
-		switch v := v.(type) {
-		case int:
-			if v < min.(int) {
-				min = v
-			}
-		case float64:
-			if v < min.(float64) {
-				min = v
-			}
+}
+
+func getMinInt(slice []int) int {
+	min := slice[0]
+	for _, value := range slice {
+		if value < min {
+			min = value
 		}
 	}
 	return min
 }
 
-func getAverage(slice interface{}) *float64 {
-	value := reflect.ValueOf(slice)
-	if value.Kind() != reflect.Slice {
-		return nil
-	}
-	var sum float64
-	for i := 0; i < value.Len(); i++ {
-		elem := value.Index(i)
-		switch elem.Kind() {
-		case reflect.Int:
-			sum += float64(elem.Int())
-		case reflect.Float64:
-			sum += elem.Float()
-		default:
-			log.Fatal("error while doing getAverage")
+func getMinFloat64(slice []float64) float64 {
+	min := slice[0]
+	for _, value := range slice {
+		if value < min {
+			min = value
 		}
 	}
-	result := sum / float64(value.Len())
-	return &result
+	return min
+}
+
+func getAverage(slice interface{}) float64 {
+	switch s := slice.(type) {
+	case []int:
+		average := getAverageInt(s)
+		return average
+	case []float64:
+		average := getAverageFloat64(s)
+		return average
+	default:
+		log.Fatal("slice is not []int or []float64")
+		return -1
+	}
+}
+
+func getAverageInt(slice []int) float64 {
+	var sum int
+	for _, v := range slice {
+		sum += v
+	}
+	return float64(sum) / float64(len(slice))
+}
+
+func getAverageFloat64(slice []float64) float64 {
+	var sum float64
+	for _, v := range slice {
+		sum += v
+	}
+	return sum / float64(len(slice))
 }
 
 func Reverse(slice interface{}) {
@@ -232,5 +280,12 @@ func AlphabetToNumber(alpha rune) int {
 		return int(alpha)
 	} else {
 		return -1
+	}
+}
+func NumberToAlphabet(number int) string {
+	if (number >= 65 && number <= 90) || (number >= 97 && number <= 122) {
+		return string(rune(number))
+	} else {
+		return ""
 	}
 }
