@@ -2,11 +2,13 @@ package main
 
 import (
 	"bufio"
+	"log"
 	"os"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 func doHere() string {
@@ -22,7 +24,7 @@ func main() {
 }
 
 //---------
-// Fast IO
+// Functions for competition Programming - DongwonTTuna
 //---------
 
 var reader = bufio.NewReader(os.Stdin)
@@ -33,13 +35,28 @@ func readLineAndSplitSpaces() []string {
 	return strings.Fields(string(bytes))
 }
 
-func convertStrsToInts(strs []string) []int {
-	var integers []int
-	for _, s := range strs {
-		n, _ := strconv.Atoi(s)
-		integers = append(integers, n)
+func parseStringsToNumbers(strs []string, isInteger bool) interface{} {
+	if isInteger {
+		var ints []int
+		for _, str := range strs {
+			n, err := strconv.Atoi(str)
+			if err != nil {
+				return nil
+			}
+			ints = append(ints, n)
+		}
+		return ints
+	} else {
+		var floats []float64
+		for _, str := range strs {
+			n, err := strconv.ParseFloat(str, 64)
+			if err != nil {
+				return nil
+			}
+			floats = append(floats, n)
+		}
+		return floats
 	}
-	return integers
 }
 
 func doubleArraytoLines(double [][]interface{}) string {
@@ -177,6 +194,27 @@ func getMin(slice interface{}) interface{} {
 	return min
 }
 
+func getAverage(slice interface{}) *float64 {
+	value := reflect.ValueOf(slice)
+	if value.Kind() != reflect.Slice {
+		return nil
+	}
+	var sum float64
+	for i := 0; i < value.Len(); i++ {
+		elem := value.Index(i)
+		switch elem.Kind() {
+		case reflect.Int:
+			sum += float64(elem.Int())
+		case reflect.Float64:
+			sum += elem.Float()
+		default:
+			log.Fatal("error while doing getAverage")
+		}
+	}
+	result := sum / float64(value.Len())
+	return &result
+}
+
 func Reverse(slice interface{}) {
 	s := reflect.ValueOf(slice)
 	if s.Kind() != reflect.Slice {
@@ -186,5 +224,13 @@ func Reverse(slice interface{}) {
 		tmp := s.Index(i).Interface()
 		s.Index(i).Set(s.Index(j))
 		s.Index(j).Set(reflect.ValueOf(tmp))
+	}
+}
+
+func AlphabetToNumber(alpha rune) int {
+	if unicode.IsLetter(alpha) {
+		return int(alpha)
+	} else {
+		return -1
 	}
 }
