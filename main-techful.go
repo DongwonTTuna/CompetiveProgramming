@@ -8,13 +8,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 func doHere() string {
-	var answer string
 
-	return answer
+	return ""
 }
 
 func main() {
@@ -51,10 +49,12 @@ func parseStringsToNumbers(strs []string, isInteger bool) interface{} {
 	}
 }
 
-func doubleArraytoLines(double [][]interface{}) string {
+func doubleArraytoLines(double interface{}) string {
 	var builder strings.Builder
-	for _, v := range double {
-		builder.WriteString(ArrayToOneLine(v))
+	val := reflect.ValueOf(double)
+
+	for i := 0; i < val.Len(); i++ {
+		builder.WriteString(ArrayToOneLineNoWhiteSpace(val.Index(i).Interface()))
 		builder.WriteString("\n")
 	}
 	return builder.String()
@@ -66,240 +66,177 @@ func parseToInt(text string) (res int) {
 }
 
 func parseNumberstoStrs(slice interface{}) []string {
+	a := reflect.ValueOf(slice)
+	res := make([]string, a.Len())
 	switch v := slice.(type) {
 	case []int:
-		return parseIntsToStrs(v)
+		for i, v := range v {
+			res[i] = strconv.Itoa(v)
+		}
 	case []float64:
-		return parseFloat64sToStrs(v)
+		for i, f := range v {
+			res[i] = strconv.FormatFloat(f, 'f', -1, 64)
+		}
 	default:
-		return []string{""}
-	}
-}
-func parseIntsToStrs(ints []int) []string {
-	res := make([]string, len(ints))
-	for i, v := range ints {
-		res[i] = strconv.Itoa(v)
-	}
-	return res
-}
-
-func parseFloat64sToStrs(float64s []float64) []string {
-	res := make([]string, len(float64s))
-	for i, f := range float64s {
-		res[i] = strconv.FormatFloat(f, 'f', -1, 64)
+		log.Fatal("parseNumberstoStrs : Type is not supported")
 	}
 	return res
 }
 
 func ArraytoMultiLine(data interface{}) string {
-	switch v := data.(type) {
-	case []int:
-		return MakeLineInts(v, "\n")
-	case []float64:
-		return MakeLineFloat64(v, "\n")
-	case []string:
-		return MakeLineString(v, "\n")
-	case []bool:
-		return MakeLineBool(v, "\n")
-	default:
-		return ""
-	}
+	return MakeLine(data, "\n")
 }
 
 func ArrayToOneLine(data interface{}) string {
-	switch v := data.(type) {
-	case []int:
-		return MakeLineInts(v, " ")
-	case []float64:
-		return MakeLineFloat64(v, " ")
-	case []string:
-		return MakeLineString(v, " ")
-	case []bool:
-		return MakeLineBool(v, " ")
-	default:
-		return ""
-	}
+	return MakeLine(data, " ")
 }
 
-func MakeLineInts(val []int, str string) string {
-	var builder strings.Builder
-	for _, v := range val {
-		builder.WriteString(strconv.Itoa(v))
-		builder.WriteString(str)
-	}
-	return strings.TrimRight(builder.String(), str)
+func ArrayToOneLineNoWhiteSpace(data interface{}) string {
+	return MakeLine(data, "")
 }
-func MakeLineFloat64(val []float64, str string) string {
+
+func MakeLine(val interface{}, separator string) string {
 	var builder strings.Builder
-	for _, v := range val {
-		builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
-		builder.WriteString(str)
-	}
-	return strings.TrimRight(builder.String(), str)
-}
-func MakeLineString(val []string, str string) string {
-	var builder strings.Builder
-	for _, v := range val {
-		builder.WriteString(v)
-		builder.WriteString(str)
-	}
-	return strings.TrimRight(builder.String(), str)
-}
-func MakeLineBool(val []bool, str string) string {
-	var builder strings.Builder
-	for _, v := range val {
-		if v {
-			builder.WriteString("Yes")
-			builder.WriteString(str)
-		} else {
-			builder.WriteString("No")
-			builder.WriteString(str)
+	switch v := val.(type) {
+	case []int:
+		for _, i := range v {
+			builder.WriteString(strconv.Itoa(i))
+			builder.WriteString(separator)
 		}
+	case []float64:
+		for _, f := range v {
+			builder.WriteString(strconv.FormatFloat(f, 'f', -1, 64))
+			builder.WriteString(separator)
+		}
+	case []string:
+		for _, s := range v {
+			builder.WriteString(s)
+			builder.WriteString(separator)
+		}
+	case []rune:
+		for _, r := range v {
+			builder.WriteRune(r)
+			builder.WriteString(separator)
+		}
+	case []bool:
+		for _, b := range v {
+			if b {
+				builder.WriteString("Yes")
+			} else {
+				builder.WriteString("No")
+			}
+			builder.WriteString(separator)
+		}
+	default:
+		log.Fatal("MakeLine : Type is not supported")
 	}
-	return strings.TrimRight(builder.String(), str)
+	return strings.TrimRight(builder.String(), separator)
 }
 
 func SortSlice(slice interface{}) {
-	switch v := slice.(type) {
+	switch slice.(type) {
 	case []int:
-		sort.Ints(v)
+		sort.Ints(slice.([]int))
 	case []float64:
-		sort.Float64s(v)
+		sort.Float64s(slice.([]float64))
 	case []string:
-		sort.Strings(v)
+		sort.Strings(slice.([]string))
+	case []rune:
+		sort.Slice(slice.([]rune), func(i, j int) bool {
+			return slice.([]rune)[i] < slice.([]rune)[j]
+		})
 	}
 }
 
 func SortSliceDescending(slice interface{}) {
-	switch v := slice.(type) {
+	switch slice.(type) {
 	case []int:
-		sort.Sort(sort.Reverse(sort.IntSlice(v)))
+		sort.Sort(sort.Reverse(sort.IntSlice(slice.([]int))))
 	case []float64:
-		sort.Sort(sort.Reverse(sort.Float64Slice(v)))
+		sort.Sort(sort.Reverse(sort.Float64Slice(slice.([]float64))))
 	case []string:
-		sort.Sort(sort.Reverse(sort.StringSlice(v)))
+		sort.Sort(sort.Reverse(sort.StringSlice(slice.([]string))))
+	case []rune:
+		sort.Slice(slice.([]rune), func(i, j int) bool {
+			return slice.([]rune)[i] > slice.([]rune)[j]
+		})
 	}
 }
 
 func getMax(slice interface{}) interface{} {
 	switch s := slice.(type) {
 	case []int:
-		max := getMaxInt(s)
-		return max
+		sort.Ints(s)
+		return s[len(s)-1]
 	case []float64:
-		max := getMaxFloat64(s)
-		return max
+		sort.Float64s(s)
+		return s[len(s)-1]
 	default:
 		return nil
 	}
-}
-
-func getMaxInt(slice []int) int {
-	max := slice[0]
-	for _, value := range slice {
-		if value > max {
-			max = value
-		}
-	}
-	return max
-}
-
-func getMaxFloat64(slice []float64) float64 {
-	max := slice[0]
-	for _, value := range slice {
-		if value > max {
-			max = value
-		}
-	}
-	return max
 }
 
 func getMin(slice interface{}) interface{} {
 	switch s := slice.(type) {
 	case []int:
-		max := getMinInt(s)
-		return max
+		sort.Ints(s)
+		return s[0]
 	case []float64:
-		max := getMinFloat64(s)
-		return max
+		sort.Float64s(s)
+		return s[0]
 	default:
 		return nil
 	}
 }
 
-func getMinInt(slice []int) int {
-	min := slice[0]
-	for _, value := range slice {
-		if value < min {
-			min = value
-		}
-	}
-	return min
-}
-
-func getMinFloat64(slice []float64) float64 {
-	min := slice[0]
-	for _, value := range slice {
-		if value < min {
-			min = value
-		}
-	}
-	return min
-}
-
 func getAverage(slice interface{}) float64 {
 	switch s := slice.(type) {
 	case []int:
-		average := getAverageInt(s)
-		return average
+		var sum int
+		for i := 0; i < len(s); i++ {
+			sum += s[i]
+		}
+		return float64(sum) / float64(len(s))
 	case []float64:
-		average := getAverageFloat64(s)
-		return average
+		var sum float64
+		for i := 0; i < len(s); i++ {
+			sum += s[i]
+		}
+		return sum / float64(len(s))
 	default:
 		log.Fatal("slice is not []int or []float64")
 		return -1
 	}
 }
 
-func getAverageInt(slice []int) float64 {
-	var sum int
-	for _, v := range slice {
-		sum += v
-	}
-	return float64(sum) / float64(len(slice))
-}
+func reverseArray(arr interface{}) {
+	val := reflect.ValueOf(arr)
 
-func getAverageFloat64(slice []float64) float64 {
-	var sum float64
-	for _, v := range slice {
-		sum += v
-	}
-	return sum / float64(len(slice))
-}
+	len := val.Len()
 
-func Reverse(slice interface{}) {
-	s := reflect.ValueOf(slice)
-	if s.Kind() != reflect.Slice {
-		return
-	}
-	for i, j := 0, s.Len()-1; i < j; i, j = i+1, j-1 {
-		tmp := s.Index(i).Interface()
-		s.Index(i).Set(s.Index(j))
-		s.Index(j).Set(reflect.ValueOf(tmp))
+	for i := 0; i < len/2; i++ {
+		opp := len - i - 1
+
+		left := val.Index(i).Interface()
+		right := val.Index(opp).Interface()
+
+		val.Index(i).Set(reflect.ValueOf(right))
+		val.Index(opp).Set(reflect.ValueOf(left))
 	}
 }
 
-func AlphabetToNumber(alpha rune) int {
-	if unicode.IsLetter(alpha) {
-		return int(alpha)
-	} else {
-		return -1
+func removeIndex(arr interface{}, index int) interface{} {
+	val := reflect.ValueOf(arr)
+
+	len := val.Len()
+
+	if index < 0 || index >= len {
+		log.Fatal("Index out of range.")
 	}
-}
-func NumberToAlphabet(number int) string {
-	if (number >= 65 && number <= 90) || (number >= 97 && number <= 122) {
-		return string(rune(number))
-	} else {
-		return ""
-	}
+
+	newSlice := reflect.MakeSlice(val.Type(), 0, len-1)
+	newSlice = reflect.AppendSlice(newSlice, val.Slice(0, index))
+	newSlice = reflect.AppendSlice(newSlice, val.Slice(index+1, len))
+
+	return newSlice.Interface()
 }
